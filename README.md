@@ -3,16 +3,36 @@
 ## Introduction
 This repository contains code related to the master thesis project on Urban Mobility by Tabea Eggler.
 
-## Jupyter Notebooks
 
-### JourneyData_Fetch_Clean.ipynb
-This notebook is responsible for downloading and cleaning the bike journey data. It involves fetching the data and performing data cleaning operations. The notebook also includes the addition of borough information to the journey data.
+## Project Structure
+This directory structure is inspired by "Cookiecutter Data Science".
 
-### JourneyData_FeatureEngineering.ipynb
-This notebook focuses on the feature engineering process for the bike journey data. It builds upon the cleaned journey data obtained from the previous notebook (JourneyData_Fetch_Clean.ipynb) and performs additional data transformations and feature creation to enhance the data for analysis purposes.
+    ├── README.md          
+    ├── data
+    │   ├── external       <- Data from third party sources.
+    │   ├── interim        <- Intermediate data that has been transformed.
+    │   ├── processed      <- The final, canonical data sets for modeling.
+    │   └── raw            <- The original, immutable data dump.
+    │
+    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    │
+    ├── notebooks          <- Jupyter notebooks.
+    │
+    ├── reports            <- Generated analysis as HTML, PDF, LaTeX.
+    │   └── figures        <- Generated graphics.
+    │
+    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
+    │                         generated with `pip freeze > requirements.txt`
+    │
+    ├── src                <- Source code for use in this project.
+    │   │
+    │   ├── data           <- Scripts to download or generate data
+    │   │
+    │   ├── features       <- Scripts to turn raw data into features for modeling
+    │   │
+    │   ├── models         <- Scripts to train models and then use trained models to make predictions
+    │   │
+    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
 
-### EDA_Bike_Stations.ipynb
-This notebook focuses on exploratory data analysis (EDA) of bike station locations in London. It visualizes the locations of bike stations across the city and provides insights into the distribution of stations among different boroughs.
 
-### EDA_JourneyData.ipynb
-This notebook is dedicated to the exploratory analysis of the bike journey data. It aims to uncover patterns, trends, and key insights related to bike usage.
+--------
