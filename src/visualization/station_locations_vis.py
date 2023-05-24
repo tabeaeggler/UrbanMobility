@@ -1,7 +1,6 @@
 import folium
 import matplotlib.pyplot as plt
 import geopandas as gpd
-import random
 import branca.colormap as cm
 
 
@@ -99,6 +98,18 @@ def create_borough_map(london_coords, boroughs_geojson_path, color_dict):
 
 
 def create_borough_station_map(bike_locs, base_map, markerColor):
+    """
+    Create a map with markers representing bike stations colored based on the borough.
+
+    Args:
+        bike_locs (pandas.DataFrame): DataFrame containing bike station data.
+        base_map (folium.Map): Base map to add markers to.
+        markerColor (str): Color of the markers.
+
+    Returns:
+        base_map (folium.Map): Map with markers representing bike stations colored based on the borough.
+
+    """
 
     for index, row in bike_locs.iterrows():
         popup_text = f"{row['name']} (borough: {row['borough']}))"
@@ -109,9 +120,18 @@ def create_borough_station_map(bike_locs, base_map, markerColor):
     
 
 
-
-
 def count_stations_per_borough(bike_locs):
+    """
+    Count the number of bike stations per borough.
+
+    Args:
+        bike_locs (pandas.DataFrame): DataFrame containing bike station data.
+
+    Returns:
+        pandas.Series: Series containing the number of bike stations per borough, sorted in descending order.
+
+    """
+
     borough_counts = bike_locs.groupby('borough').size()
     borough_counts = borough_counts.sort_values(ascending=False)
 
@@ -119,6 +139,18 @@ def count_stations_per_borough(bike_locs):
 
 
 def create_color_borough_mapping(colormap_density, borough_counts):
+    """
+    Create a color mapping dictionary for boroughs based on station counts.
+
+    Args:
+        colormap_density (list): List of colors representing the density scale.
+        borough_counts (pandas.Series): Series containing the number of bike stations per borough.
+
+    Returns:
+        dict: Dictionary mapping borough names to color values.
+
+    """
+        
     max_count = borough_counts.max()
 
     def map_count_to_color_index(count, max_count):
