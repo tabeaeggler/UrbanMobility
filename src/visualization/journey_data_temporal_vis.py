@@ -9,48 +9,6 @@ from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 
 
-def freq_analysis_time_intervals(journey_df):
-    fig, axs = plt.subplots(3, 2, figsize=(18, 12))
-
-    # Hourly bike rentals
-    sns.countplot(x='hour', data=journey_df, color='#66c2a5', ax=axs[0, 0])
-    axs[0, 0].set_title('Total Bike Rentals by Hour of Day')
-    axs[0, 0].set_xticklabels([f'{x:02d}' for x in range(24)])
-    axs[0, 0].yaxis.get_major_formatter().set_scientific(False)
-
-    # Part of day bike rentals
-    sns.countplot(x='part_of_day', data=journey_df, color='#fc8d62', ax=axs[0, 1])
-    axs[0, 1].set_title('Total Bike Rentals by Part of Day')
-    axs[0, 1].set_xticklabels(['Early morning', 'Morning', 'Afternoon', 'Evening', 'Night'])
-    axs[0, 1].yaxis.get_major_formatter().set_scientific(False)
-
-    # Daily bike rentals
-    sns.countplot(x='day_of_week', data=journey_df, color='#8da0cb', ax=axs[1, 0])
-    axs[1, 0].set_title('Total Bike Rentals by Day of Week')
-    axs[1, 0].set_xticklabels(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
-    axs[1, 0].yaxis.get_major_formatter().set_scientific(False)
-
-    # Monthly bike rentals
-    sns.countplot(x='month', data=journey_df, color='#e78ac3', ax=axs[1, 1])
-    axs[1, 1].set_title('Total Bike Rentals by Month')
-    axs[1, 1].set_xticklabels(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'])
-    axs[1, 1].yaxis.get_major_formatter().set_scientific(False)
-
-    # Seasonal bike rentals
-    sns.countplot(x='season', data=journey_df, color='#a6d854', ax=axs[2, 0])
-    axs[2, 0].set_title('Total Bike Rentals by Season')
-    axs[2, 0].set_xticklabels(['Spring', 'Summer', 'Fall', 'Winter'])
-    axs[2, 0].yaxis.get_major_formatter().set_scientific(False)
-
-    # Yearly bike rentals
-    sns.countplot(x='year', data=journey_df, color='#ffd92f', ax=axs[2, 1])
-    axs[2, 1].set_title('Total Bike Rentals by Year')
-    axs[2, 1].yaxis.get_major_formatter().set_scientific(False)
-
-
-    plt.tight_layout()
-    return plt
-
 
 def time_series_decomposition(journey_df, decomposed):
 
@@ -98,17 +56,103 @@ def time_series_decomposition(journey_df, decomposed):
     return plt
 
 
-def correlation_plot(df, aggregation, title):
-    # aggregate the data based on desired frequency (e.g., daily)
-    aggregated_data = df.resample(aggregation, on='start_date').mean()
 
-    # calculate the correlation matrix
-    correlation_matrix = aggregated_data.corr()
+def freq_analysis_time_intervals(journey_df):
+    fig, axs = plt.subplots(3, 2, figsize=(18, 12))
 
-    # create the correlation plot
-    sns.set(style="white")
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", linewidths=0.5)
-    plt.title(title)
+    # Hourly bike rentals
+    sns.countplot(x='hour', data=journey_df, color='#66c2a5', ax=axs[0, 0])
+    axs[0, 0].set_title('Total Bike Rentals by Hour of Day')
+    axs[0, 0].set_xticklabels([f'{x:02d}' for x in range(24)])
+    axs[0, 0].yaxis.get_major_formatter().set_scientific(False)
 
+    # Part of day bike rentals
+    sns.countplot(x='part_of_day', data=journey_df, color='#fc8d62', ax=axs[0, 1])
+    axs[0, 1].set_title('Total Bike Rentals by Part of Day')
+    axs[0, 1].set_xticklabels(['Early morning', 'Morning', 'Afternoon', 'Evening', 'Night'])
+    axs[0, 1].yaxis.get_major_formatter().set_scientific(False)
+
+    # Daily bike rentals
+    sns.countplot(x='day_of_week', data=journey_df, color='#8da0cb', ax=axs[1, 0])
+    axs[1, 0].set_title('Total Bike Rentals by Day of Week')
+    axs[1, 0].set_xticklabels(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+    axs[1, 0].yaxis.get_major_formatter().set_scientific(False)
+
+    # Monthly bike rentals
+    sns.countplot(x='month', data=journey_df, color='#e78ac3', ax=axs[1, 1])
+    axs[1, 1].set_title('Total Bike Rentals by Month')
+    axs[1, 1].set_xticklabels(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'])
+    axs[1, 1].yaxis.get_major_formatter().set_scientific(False)
+
+    # Seasonal bike rentals
+    sns.countplot(x='season', data=journey_df, color='#a6d854', ax=axs[2, 0])
+    axs[2, 0].set_title('Total Bike Rentals by Season')
+    axs[2, 0].set_xticklabels(['Spring', 'Summer', 'Fall', 'Winter'])
+    axs[2, 0].yaxis.get_major_formatter().set_scientific(False)
+
+    # Yearly bike rentals
+    sns.countplot(x='year', data=journey_df, color='#ffd92f', ax=axs[2, 1])
+    axs[2, 1].set_title('Total Bike Rentals by Year')
+    axs[2, 1].yaxis.get_major_formatter().set_scientific(False)
+
+
+    plt.tight_layout()
+    return plt
+
+
+
+
+def demand_analysis_time_intervals(journey_df):
+    fig, axs = plt.subplots(4, 2, figsize=(18, 12))
+
+    # Hourly bike rentals
+    sns.boxplot(x='hour', y='demand', data=journey_df, color='#66c2a5', ax=axs[0, 0])
+    axs[0, 0].set_title('Relationship: Demand and Hour of Day')
+    axs[0, 0].set_xticklabels([f'{x:02d}' for x in range(24)])
+    axs[0, 0].yaxis.get_major_formatter().set_scientific(False)
+
+    # Part of day bike rentals
+    sns.boxplot(x='part_of_day', y='demand', data=journey_df, color='#fc8d62', ax=axs[0, 1])
+    axs[0, 1].set_title('Relationship: Demand and Part of Day')
+    axs[0, 1].set_xticklabels(['Early morning', 'Morning', 'Afternoon', 'Evening', 'Night'])
+    axs[0, 1].yaxis.get_major_formatter().set_scientific(False)
+
+    # Daily bike rentals
+    sns.boxplot(x='day_of_week', y='demand', data=journey_df, color='#8da0cb', ax=axs[1, 0])
+    axs[1, 0].set_title('Relationship: Demand and Day of Week')
+    axs[1, 0].set_xticklabels(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+    axs[1, 0].yaxis.get_major_formatter().set_scientific(False)
+
+    # Monthly bike rentals
+    sns.boxplot(x='month', y='demand', data=journey_df, color='#e78ac3', ax=axs[1, 1])
+    axs[1, 1].set_title('Relationship: Demand and Month')
+    axs[1, 1].set_xticklabels(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'])
+    axs[1, 1].yaxis.get_major_formatter().set_scientific(False)
+
+    # Seasonal bike rentals
+    sns.boxplot(x='season', y='demand', data=journey_df, color='#a6d854', ax=axs[2, 0])
+    axs[2, 0].set_title('Relationship: Demand and Season')
+    axs[2, 0].set_xticklabels(['Spring', 'Summer', 'Fall', 'Winter'])
+    axs[2, 0].yaxis.get_major_formatter().set_scientific(False)
+
+    # Yearly bike rentals
+    sns.boxplot(x='year', y='demand', data=journey_df, color='#ffd92f', ax=axs[2, 1])
+    axs[2, 1].set_title('Relationship: Demand and Year')
+    axs[2, 1].set_title('Total Bike Rentals by Year')
+    axs[2, 1].yaxis.get_major_formatter().set_scientific(False)
+
+    # Weekday bike rentals
+    sns.boxplot(x='is_weekend', y='demand', data=journey_df, color='#e5c494', ax=axs[3, 0])
+    axs[3, 0].set_title('Relationship: Demand and Weekday')
+    axs[3, 0].set_xticklabels(['Weekday', 'Weekend'])
+    axs[3, 0].yaxis.get_major_formatter().set_scientific(False)
+
+
+    # Bankholiday bike rentals
+    sns.boxplot(x='bank_holiday', y='demand', data=journey_df, color='#b3b3b3', ax=axs[3, 1])
+    axs[3, 1].set_title('Relationship: Demand and Bank Holiday')
+    axs[3, 1].set_xticklabels(['Regular Day', 'Bank Holiday'])
+    axs[3, 1].yaxis.get_major_formatter().set_scientific(False)
+
+    plt.tight_layout()
     return plt
