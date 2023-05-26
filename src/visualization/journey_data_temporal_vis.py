@@ -1,24 +1,26 @@
-import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from statsmodels.tsa.seasonal import seasonal_decompose
 import matplotlib.dates as mdates
-import calmap
 from matplotlib import pyplot as plt
-from matplotlib.dates import DateFormatter
 import matplotlib.dates as mdates
 
 
 
 def time_series_decomposition(journey_df, decomposed):
 
-    # Set the size of the figure
+    """
+    This function is used for decomposing a time series and visualizing its components.
+    
+    Parameters:
+    journey_df (pandas.DataFrame): The data frame that contains the journey data.
+    decomposed (decomposed object): The decomposed time series object.
+
+    Returns:
+    matplotlib.pyplot: The plot object that shows the original, original with lockdown periods, trend, seasonality, and residuals of the time series.
+    """
+
     fig, axs = plt.subplots(5, 1, figsize=(14, 12))
-
-    # Create a 'date' column that contains only the date part of the 'start_time'
     journey_df['date'] = journey_df['start_date'].dt.date
-
-    # Group by date and count the number of journeys
     journeys_per_date = journey_df.groupby(['date']).size().reset_index(name='count')
 
     # 1. Plot the original data
@@ -35,7 +37,6 @@ def time_series_decomposition(journey_df, decomposed):
     axs[1].axvspan('2021-01-06', '2021-03-08', color='purple', alpha=0.3, label='Third National Lockdown')
     axs[1].legend()
     axs[1].set_title('Observed with lockdown periods')
-
 
     # 3. Plot the trend
     axs[2].plot(decomposed.trend, label='Trend')
@@ -58,43 +59,53 @@ def time_series_decomposition(journey_df, decomposed):
 
 
 def freq_analysis_time_intervals(journey_df):
+    """
+    Performs a frequency analysis of bike rentals over various time intervals and produces a plot for each interval.
+    The time intervals considered are: hour of the day, part of the day, day of the week, month, season, and year.
+    
+    Parameters:
+    journey_df (pandas.DataFrame): DataFrame containing the journey data and: 'hour', 'part_of_day', 'day_of_week', 'month', 'season', and 'year'.
+
+    Returns:
+    matplotlib.pyplot: A plot object with subplots for each of the time intervals.
+    """
+    
     fig, axs = plt.subplots(3, 2, figsize=(18, 12))
 
-    # Hourly bike rentals
+    # hourly bike rentals
     sns.countplot(x='hour', data=journey_df, color='#66c2a5', ax=axs[0, 0])
     axs[0, 0].set_title('Total Bike Rentals by Hour of Day')
     axs[0, 0].set_xticklabels([f'{x:02d}' for x in range(24)])
     axs[0, 0].yaxis.get_major_formatter().set_scientific(False)
 
-    # Part of day bike rentals
+    # part of day bike rentals
     sns.countplot(x='part_of_day', data=journey_df, color='#fc8d62', ax=axs[0, 1])
     axs[0, 1].set_title('Total Bike Rentals by Part of Day')
     axs[0, 1].set_xticklabels(['Early morning', 'Morning', 'Afternoon', 'Evening', 'Night'])
     axs[0, 1].yaxis.get_major_formatter().set_scientific(False)
 
-    # Daily bike rentals
+    # daily bike rentals
     sns.countplot(x='day_of_week', data=journey_df, color='#8da0cb', ax=axs[1, 0])
     axs[1, 0].set_title('Total Bike Rentals by Day of Week')
     axs[1, 0].set_xticklabels(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
     axs[1, 0].yaxis.get_major_formatter().set_scientific(False)
 
-    # Monthly bike rentals
+    # monthly bike rentals
     sns.countplot(x='month', data=journey_df, color='#e78ac3', ax=axs[1, 1])
     axs[1, 1].set_title('Total Bike Rentals by Month')
     axs[1, 1].set_xticklabels(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'])
     axs[1, 1].yaxis.get_major_formatter().set_scientific(False)
 
-    # Seasonal bike rentals
+    # seasonal bike rentals
     sns.countplot(x='season', data=journey_df, color='#a6d854', ax=axs[2, 0])
     axs[2, 0].set_title('Total Bike Rentals by Season')
     axs[2, 0].set_xticklabels(['Spring', 'Summer', 'Fall', 'Winter'])
     axs[2, 0].yaxis.get_major_formatter().set_scientific(False)
 
-    # Yearly bike rentals
+    # yearly bike rentals
     sns.countplot(x='year', data=journey_df, color='#ffd92f', ax=axs[2, 1])
     axs[2, 1].set_title('Total Bike Rentals by Year')
     axs[2, 1].yaxis.get_major_formatter().set_scientific(False)
-
 
     plt.tight_layout()
     return plt
@@ -103,6 +114,18 @@ def freq_analysis_time_intervals(journey_df):
 
 
 def demand_analysis_time_intervals(journey_df):
+    """
+    Performs an analysis of bike rental demand over various time intervals and produces a boxplot for each.
+    The time intervals considered are: hour of the day, part of the day, day of the week, month, season, year, weekday, and bank holiday.
+    
+    Parameters:
+    journey_df (pandas.DataFrame): DataFrame containing the journey data,
+    containing the columns: 'hour', 'part_of_day', 'day_of_week', 'month', 'season', 'year', 'is_weekend', 'bank_holiday', and 'demand'.
+                
+    Returns:
+    matplotlib.pyplot: A plot object with subplots for each of the time intervals.
+    """
+
     fig, axs = plt.subplots(4, 2, figsize=(18, 12))
 
     # Hourly bike rentals

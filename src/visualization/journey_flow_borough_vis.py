@@ -5,19 +5,39 @@ import seaborn as sns
 
 
 def create_inbound_outbound_counts(journey_df):
-    # Count of outbound journeys for each borough
+    """
+    Calculates the counts of outbound and inbound journeys for each borough.
+
+    Parameters:
+    journey_df (pandas.DataFrame): A DataFrame containing journey data, containing: 'start_borough', 'end_borough', and 'rental_id' columns.
+
+    Returns:
+    pandas.DataFrame: A DataFrame with columns 'borough', 'outbound', and 'inbound'. Each row represents a borough and includes the counts of outbound and inbound journeys.
+    """
+
+    # count of outbound journeys for each borough
     outbound_counts = journey_df.groupby('start_borough')['rental_id'].count().reset_index()
     outbound_counts.columns = ['borough', 'outbound']
 
-    # Count of inbound journeys for each borough
+    # count of inbound journeys for each borough
     inbound_counts = journey_df.groupby('end_borough')['rental_id'].count().reset_index()
     inbound_counts.columns = ['borough', 'inbound']
 
-    # Merge the outbound and inbound counts
-    return pd.merge(outbound_counts, inbound_counts, on='borough')
+    # merge the outbound and inbound counts
+    borough_counts = pd.merge(outbound_counts, inbound_counts, on='borough')
 
 
 def create_inbound_outbound_plot(borough_counts):
+    """
+    Creates a plot of inbound and outbound journey counts for each borough.
+
+    Parameters:
+    borough_counts (pandas.DataFrame): A DataFrame with columns 'borough', 'outbound', and 'inbound'.
+
+    Returns:
+    matplotlib.pyplot: A bar plot showing the counts of inbound and outbound journeys for each borough.
+    """
+
     # reshape the data
     borough_counts_melted = borough_counts.melt(id_vars='borough', var_name='type', value_name='count')
     borough_counts_melted = borough_counts_melted.sort_values('count', ascending=False)
@@ -36,12 +56,22 @@ def create_inbound_outbound_plot(borough_counts):
 
 
 def create_data_flowmap(journey_df):
-    # create count dataframe
+    """
+    Creates data for flowmap plot of inbound and outbound journey counts for each borough.
+
+    Parameters:
+    borough_counts (pandas.DataFrame): A DataFrame with columns 'borough', 'outbound', and 'inbound'. 
+
+    Returns:
+    matplotlib.pyplot: A bar plot showing the counts of inbound and outbound journeys for each borough.
+    """
+
+    # create and save count dataframe
     journey_df_borough= journey_df.copy()
     journey_df_borough = journey_df.groupby(['start_borough', 'end_borough']).size().reset_index(name='counts')
     journey_df_borough.to_csv('../data/interim/flow_count_per_borough.csv')
 
-    # create borough locations dataframe
+    # create and save borough locations dataframe
     def _get_location(borough_name):
         geolocator = Nominatim(user_agent="geoapiExercises")
         location = geolocator.geocode(borough_name + ', London', timeout=10000)

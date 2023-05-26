@@ -4,6 +4,18 @@ import seaborn as sns
 
 def correlation_plot(df, title):
 
+    """
+    Creates a correlation plot (heatmap) for the given DataFrame, showing the 
+    correlation coefficients between pairs of variables.
+
+    Parameters:
+    df (pandas.DataFrame): DataFrame containing the data to plot. 
+    title (str): The title of the plot.
+
+    Returns:
+    matplotlib.pyplot: A correlation plot (heatmap) object.
+    """
+
     # calculate the correlation matrix
     correlation_matrix = df.corr()
 
