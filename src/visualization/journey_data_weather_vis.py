@@ -9,7 +9,7 @@ def correlation_plot(df, title):
 
     # create the correlation plot
     sns.set(style="white")
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(14, 10))
     sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", linewidths=0.5)
     plt.title(title)
 
