@@ -24,7 +24,7 @@ def create_inbound_outbound_counts(journey_df):
     inbound_counts.columns = ['borough', 'inbound']
 
     # merge the outbound and inbound counts
-    borough_counts = pd.merge(outbound_counts, inbound_counts, on='borough')
+    return pd.merge(outbound_counts, inbound_counts, on='borough')
 
 
 def create_inbound_outbound_plot(borough_counts):
@@ -43,14 +43,12 @@ def create_inbound_outbound_plot(borough_counts):
     borough_counts_melted = borough_counts_melted.sort_values('count', ascending=False)
 
     # create a grouped bar chart
-    plt.figure(figsize=(8, 5))
     sns.catplot(data=borough_counts_melted, x='borough', y='count', hue='type', kind='bar', height=8, aspect=2)
-
-    # add labels and a title
     plt.xlabel('Borough', fontsize=14)
     plt.ylabel('Count', fontsize=14)
     plt.title('Inbound and Outbound Counts by Borough', fontsize=16)
     plt.xticks(rotation=70)
+    plt.figure(figsize=(6, 4))
     return plt
 
 
@@ -69,7 +67,7 @@ def create_data_flowmap(journey_df):
     # create and save count dataframe
     journey_df_borough= journey_df.copy()
     journey_df_borough = journey_df.groupby(['start_borough', 'end_borough']).size().reset_index(name='counts')
-    journey_df_borough.to_csv('../data/interim/flow_count_per_borough.csv')
+    journey_df_borough.to_csv('../data/interim/borough_flow_count.csv')
 
     # create and save borough locations dataframe
     def _get_location(borough_name):
