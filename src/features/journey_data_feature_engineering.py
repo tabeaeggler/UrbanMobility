@@ -1,6 +1,8 @@
 import pandas as pd
+import numpy as np
 from rapidfuzz import fuzz
 from concurrent import futures
+from visualization import station_locations_vis as vis_stations
 
 
 def get_part_of_day(hour):
@@ -303,3 +305,216 @@ def manual_borough_mapping(journey_df):
     journey_df = journey_df.dropna(subset=['start_borough', 'end_borough'])
 
     return journey_df
+
+
+
+def prepare_boroughs_stationcount_yearlydemand_boroughcode(bike_locs, journey_19_df):    
+    # add bike station counts per borough
+    borough_df = vis_stations.count_stations_per_borough(bike_locs)
+    borough_df = borough_df.reset_index()
+    borough_df.columns = ['borough', 'bike_station_counts']
+
+    # add yearly demand and demand standardised by bike station counts
+    borough_df = borough_df.set_index('borough')
+    demand_start = journey_19_df.groupby('start_borough')['start_station_name'].count()
+    demand_end = journey_19_df.groupby('end_borough')['start_station_name'].count()
+    borough_df['demand_count_2019_start_borough'] = demand_start
+    borough_df['demand_count_2019_end_borough'] = demand_end
+    borough_df['demand_stand_count_2019_start_borough'] = borough_df['demand_count_2019_start_borough'] / borough_df['bike_station_counts']
+    borough_df['demand_stand_count_2019_end_borough'] = borough_df['demand_count_2019_end_borough'] / borough_df['bike_station_counts']
+
+    # add borough codes
+    borough_codes = pd.read_csv('../data/external/borough_code_mapping.csv')
+    borough_df = borough_df.merge(borough_codes, on='borough', how='left')
+
+    return borough_df
+
+
+def add_borough_demographic_features(borough_df, features_to_add):
+    if 'TS006' in features_to_add:
+        TS006_df = pd.read_csv('../data/external/TS006_population_density.csv')
+        borough_df = borough_df.merge(TS006_df, on='borough_code', how='left')
+
+    if 'TS007' in features_to_add:
+        TS007_df = pd.read_csv('../data/external/TS007_age.csv')
+        borough_df = _melte_and_merge(borough_df, TS007_df, 'age_total', 'age', 'borough_code', _compute_age_stats)
+
+    if 'TS008' in features_to_add:
+        TS008_df = pd.read_csv('../data/external/TS008_gender.csv')
+        TS008_df['female_ratio'] = TS008_df['female'] / TS008_df['all']
+        borough_df = borough_df.merge(TS008_df[['borough_code', 'female_ratio']], on='borough_code', how='left')
+
+    if 'TS017' in features_to_add:  
+        TS017_df = pd.read_csv('../data/external/TS017_household_size.csv')
+        TS017_df['householdsize_3-5'] = TS017_df[[f'householdsize_{i}' for i in range(3, 6)]].sum(axis=1)
+        TS017_df['householdsize_6+'] = TS017_df[[f'householdsize_{i}' for i in range(6, 9)]].sum(axis=1)
+        groups_TS017 = ['householdsize_1', 'householdsize_2', 'householdsize_3-5', 'householdsize_6+']
+        borough_df = _compute_ratios_and_merge(borough_df, TS017_df, groups_TS017, 'all')
+    
+    if 'TS021' in features_to_add:
+        TS021_df = pd.read_csv('../data/external/TS021_ethnic_group.csv')
+        groups_TS021 = ['ethnic_asian', 'ethnic_african_caribbean', 'ethnic_mixed', 'ethnic_white', 'ethnic_arab_other']
+        borough_df = _compute_ratios_and_merge(borough_df, TS021_df, groups_TS021, 'ethnic_all')
+
+    if 'TS030' in features_to_add:
+        TS030_df = pd.read_csv('../data/external/TS030_religion.csv')
+        groups_TS030 = ['religion_no', 'religion_christian', 'religion_buddhist', 'religion_hindu', 'religion_jewish', 'religion_muslim', 'religion_sikh']
+        borough_df = _compute_ratios_and_merge(borough_df, TS030_df, groups_TS030, 'religion_all')
+
+    if 'TS067' in features_to_add:
+        TS067_df = pd.read_csv('../data/external/TS067_education.csv')
+        groups_TS067 = ['highes_education_no', 'highes_education_l1', 'highes_education_l2', 'highes_education_apprenticeship', 'highes_education_l3', 'highes_education_l4']
+        borough_df = _compute_ratios_and_merge(borough_df, TS067_df, groups_TS067, 'highes_education_all')
+
+    if 'TS037' in features_to_add:
+        TS037_df = pd.read_csv('../data/external/TS037_general_health.csv')
+        groups_TS037 = ['health_1', 'health_2', 'health_3', 'health_4', 'health_5']
+        borough_df = _compute_ratios_and_merge(borough_df, TS037_df, groups_TS037, 'health_all')
+
+    if 'ADD001' in features_to_add:
+        ADD001_df = pd.read_csv('../data/external/AD001_green_blue_cover.csv')
+        borough_df = borough_df.merge(ADD001_df[["green_cover_ratio",'blue_cover_ratio', "borough_code"]], on='borough_code', how='left')
+
+    if 'ADD007' in features_to_add:
+        ADD007_df = pd.read_csv('../data/external/ADD007_sports_participation_rates.csv')
+        borough_df = borough_df.merge(ADD007_df[["sports_participation_ratio", 'borough']], on='borough', how='left')
+
+    if 'ADD012' in features_to_add:
+        ADD012_df = pd.read_csv('../data/external/ADD012_crime_offences_rate.csv')
+        borough_df = borough_df.merge(ADD012_df[["crime_offences_rate", 'borough']], on='borough', how='left')
+
+    if 'ADD003' in features_to_add:
+        ADD003_df = pd.read_csv('../data/external/ADD003_business_density.csv')
+        borough_df = borough_df.merge(ADD003_df[["business_density", 'borough_code']], on='borough_code', how='left')
+    
+    if 'TS058' in features_to_add:
+        TS058_df = pd.read_csv('../data/external/TS058_travel_to_work.csv')
+        TS058_df['distance_work_20km_more'] = TS058_df['distance_work_20km_30km'] + TS058_df['distance_work_30km_40km'] + TS058_df['distance_work_40km_60km'] + TS058_df['distance_work_60km_more']
+        groups_TS058 = ['distance_work_less_2km', 'distance_work_2km_5km', 'distance_work_5km_10km', 'distance_work_10km_20km', 'distance_work_20km_more', 'distance_work_homeoffice', 'distance_work_no_fix_place']
+        borough_df = _compute_ratios_and_merge(borough_df, TS058_df, groups_TS058, 'distance_work_all')
+
+    if 'ADD008' in features_to_add:
+        ADD008_df = pd.read_csv('../data/external/ADD008_road_traffic_area.csv')
+        ADD008_1_df = pd.read_csv('../data/external/ADD008_road_traffic_volume.csv')
+        ADD008_df = ADD008_df.merge(ADD008_1_df, on='borough_code', how='left')
+        ADD008_df['road_traffic_ratio'] = ADD008_df['road_traffic_volume'] / ADD008_df['road_traffic_area'] 
+        borough_df = borough_df.merge(ADD008_df[["road_traffic_ratio", 'borough_code']], on='borough_code', how='left')
+
+    if 'ADD009' in features_to_add:
+        ADD009_df = pd.read_csv('../data/external/ADD009_healthy_streets_score.csv')
+        borough_df = borough_df.merge(ADD009_df[["street_health_score", 'borough']], on='borough', how='left')
+
+    if 'ADD002' in features_to_add:
+        ADD002_df = pd.read_csv('../data/external/ADD002_house_price_avg.csv')
+        ADD002_df = ADD002_df.groupby('borough_code')['house_price_avg'].mean().reset_index()
+        borough_df = borough_df.merge(ADD002_df, on='borough_code', how='left')
+
+    if 'TS045' in features_to_add:
+        TS045_df = pd.read_csv('../data/external/TS045_car.csv')
+        TS045_df['car_household_ratio'] = (TS045_df['cars_1'] + TS045_df['cars_2'] + TS045_df['cars_3']) / TS045_df['cars_all']
+        borough_df = borough_df.merge(TS045_df[["car_household_ratio", 'borough_code']], on='borough_code', how='left')
+
+    if 'TS044' in features_to_add:
+        ADD044_df = pd.read_csv('../data/external/TS044_accommodation_type.csv')
+        ADD044_df['accommodation_house'] = ADD044_df['Accommodation type: Detached'] + ADD044_df['Accommodation type: Semi-detached'] + ADD044_df['Accommodation type: Terraced']
+        ADD044_df['accommodation_flat'] = ADD044_df['Accommodation type: In a purpose-built block of flats or tenement'] + ADD044_df['Accommodation type: Part of a converted or shared house, including bedsits'] + ADD044_df['Accommodation type: Part of another converted building, for example, former school, church or warehouse'] + ADD044_df['Accommodation type: In a commercial building, for example, in an office building, hotel or over a shop']
+        ADD044_df['accommodation_mobile'] = ADD044_df['Accommodation type: A caravan or other mobile or temporary structure']
+        groups_TS044 = ['accommodation_house', 'accommodation_flat', 'accommodation_mobile']
+        borough_df = _compute_ratios_and_merge(borough_df, ADD044_df, groups_TS044, 'accommodation_all')
+
+    if 'TS054' in features_to_add:
+        ADD054_df = pd.read_csv('../data/external/TS054_tenure.csv')
+        ADD054_df['tenure_owned_sharedowned'] = ADD054_df['tenure_owned'] + ADD054_df['tenure_owned_outright'] + ADD054_df['tenure_owned_mortage'] + ADD054_df['tenure_owned_shared']
+        groups_ADD054 = ['tenure_owned_sharedowned']
+        borough_df = _compute_ratios_and_merge(borough_df, ADD054_df, groups_ADD054, 'tenure_all')
+
+    if 'TS038' in features_to_add:
+        ADD038_df = pd.read_csv('../data/external/TS038_disability.csv')
+        groups_ADD038 = ['disability']
+        borough_df = _compute_ratios_and_merge(borough_df, ADD038_df, groups_ADD038, 'disability_all')
+
+    if 'TS016' in features_to_add:
+        TS016_df = pd.read_csv('../data/external/TS016_length_residence.csv')
+        TS016_df['residence_lengh_10yr_less'] = TS016_df['residence_lengh_2yr_less'] + TS016_df['residence_lengh_2yr_5yr'] + TS016_df['residence_lengh_5yr_10yr']
+        groups_TS016 = ['residence_lengh_uk_born', 'residence_lengh_10yr_plus', 'residence_lengh_10yr_less']
+        borough_df = _compute_ratios_and_merge(borough_df, TS016_df, groups_TS016, 'residence_length_all')
+
+    if 'ADD006' in features_to_add:
+        ADD006_df = pd.read_csv('../data/external/ADD006_personal_well_being.csv')
+        borough_df = borough_df.merge(ADD006_df, on='borough_code', how='left')
+
+    if 'ADD011' in features_to_add:
+        ADD011_df = pd.read_csv('../data/external/ADD011_local_election_2018.csv')
+        borough_df = borough_df.merge(ADD011_df, on='borough', how='left')
+
+    if 'TS062' in features_to_add:
+        TS062_df = pd.read_csv('../data/external/TS062_socio_economic_classification.csv')
+        TS062_df['occupation_high_level_ratio'] = TS062_df['occupation_L1_L2_L3'] + TS062_df['occupation_L4_L5_L6']
+        TS062_df['occupation_small_intermediate_ratio'] = TS062_df['occupation_L7'] + TS062_df['occupation_L8_L9']
+        TS062_df['occupation_lower_level_ratio'] = TS062_df['occupation_L10_L11'] + TS062_df['occupation_L12'] + TS062_df['occupation_L13']
+        TS062_df['occupation_unemployed_ratio'] = TS062_df['occupation_L14']
+        TS062_df['occupation_student_ratio'] = TS062_df['occupation_L15']
+        groups_TS062 = ['occupation_high_level_ratio', 'occupation_small_intermediate_ratio', 'occupation_lower_level_ratio', 'occupation_unemployed_ratio', 'occupation_student_ratio']
+        borough_df = _compute_ratios_and_merge(borough_df, TS062_df, groups_TS062, 'occupation_all')
+
+    if 'ADD004' in features_to_add:
+            ADD004_df = pd.read_csv('../data/external/ADD004_earnings_workplace_borough.csv')
+            borough_df = borough_df.merge(ADD004_df, on='borough_code', how='left')
+            borough_df['earnings_workplace'] = pd.to_numeric(borough_df['earnings_workplace'], errors='coerce')
+
+
+    
+    return borough_df
+
+
+
+
+def _compute_ratios_and_merge(original_df, new_df, groups, total_column_name):
+    # Calculate ratio for each group
+    for group in groups:
+        new_df[f'{group}_ratio'] = new_df[group] / new_df[total_column_name]
+
+    # Keep only the ratio columns
+    ratio_columns = [f'{group}_ratio' for group in groups]
+    new_df = new_df[['borough_code'] + ratio_columns]
+
+    # Merge with original dataframe
+    merged_df = original_df.merge(new_df, on='borough_code', how='left')
+    
+    return merged_df
+
+
+
+def _melte_and_merge(original_df, new_df, total_col, value_col, groupby_col, compute_stats):
+# Get rid of the string part in column names and convert them to integers
+    value_cols = new_df.columns[2:].str.replace(f'{value_col}_', '').astype(int)
+    new_df.columns = list(new_df.columns[:2]) + list(value_cols)
+
+    # Melt the dataframe to have values in one column and their frequencies in another
+    melted_df = new_df.melt(id_vars=[groupby_col, total_col], var_name=value_col, value_name='frequency')
+    melted_df[value_col] = melted_df[value_col].astype(int)
+
+    # Group by borough and apply function
+    value_stats = melted_df.groupby(groupby_col).apply(compute_stats)
+
+    # Merge with original dataframe
+    merged_df = original_df.merge(value_stats, left_on=groupby_col, right_index=True, how='left')
+    
+    return merged_df
+
+
+
+# Functions to compute specific statistics
+def _compute_age_stats(df):
+    # Replicate each age value according to its frequency
+    ages = np.repeat(df['age'], df['frequency'])
+
+    # Calculate statistics
+    age_mean = np.mean(ages)
+    age_25_percentile = np.percentile(ages, 25)
+    age_75_percentile = np.percentile(ages, 75)
+
+    return pd.Series({'age_mean': age_mean, 
+                      'age_25_percentile': age_25_percentile, 
+                      'age_75_percentile': age_75_percentile})
+
