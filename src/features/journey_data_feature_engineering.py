@@ -3,6 +3,7 @@ import numpy as np
 from rapidfuzz import fuzz
 from concurrent import futures
 from visualization import station_locations_vis as vis_stations
+from data import journey_data_preprocessing as preprocess
 
 
 def get_part_of_day(hour):
@@ -308,29 +309,29 @@ def manual_borough_mapping(journey_df):
 
 
 
-def prepare_boroughs_stationcount_yearlydemand_boroughcode(bike_locs, journey_19_df):    
+def add_borough_demographic_features(bike_locs, features_to_add):
+    """
+    This function reads various external data files to add demographic features like population density, age, gender, etc., based on the provided list of features.
+    Each feature corresponds to a specific demographic indicator and is added to the DataFrame via merging.
+
+    Args:
+    bike_locs (DataFrame): DataFrame providing locations of bike stations.
+    features_to_add (list): List of features to be added.
+
+    Returns:
+    DataFrame: DataFrame with demographic features for each borough.
+
+    """
     # add bike station counts per borough
     borough_df = vis_stations.count_stations_per_borough(bike_locs)
     borough_df = borough_df.reset_index()
     borough_df.columns = ['borough', 'bike_station_counts']
 
-    # add yearly demand and demand standardised by bike station counts
-    borough_df = borough_df.set_index('borough')
-    demand_start = journey_19_df.groupby('start_borough')['start_station_name'].count()
-    demand_end = journey_19_df.groupby('end_borough')['start_station_name'].count()
-    borough_df['demand_count_2019_start_borough'] = demand_start
-    borough_df['demand_count_2019_end_borough'] = demand_end
-    borough_df['demand_stand_count_2019_start_borough'] = borough_df['demand_count_2019_start_borough'] / borough_df['bike_station_counts']
-    borough_df['demand_stand_count_2019_end_borough'] = borough_df['demand_count_2019_end_borough'] / borough_df['bike_station_counts']
-
     # add borough codes
     borough_codes = pd.read_csv('../data/external/borough_code_mapping.csv')
     borough_df = borough_df.merge(borough_codes, on='borough', how='left')
 
-    return borough_df
-
-
-def add_borough_demographic_features(borough_df, features_to_add):
+    # add additional demographic features
     if 'TS006' in features_to_add:
         TS006_df = pd.read_csv('../data/external/TS006_population_density.csv')
         borough_df = borough_df.merge(TS006_df, on='borough_code', how='left')
@@ -462,23 +463,32 @@ def add_borough_demographic_features(borough_df, features_to_add):
             borough_df = borough_df.merge(ADD004_df, on='borough_code', how='left')
             borough_df['earnings_workplace'] = pd.to_numeric(borough_df['earnings_workplace'], errors='coerce')
 
-
     
     return borough_df
 
 
-
-
 def _compute_ratios_and_merge(original_df, new_df, groups, total_column_name):
-    # Calculate ratio for each group
+    """
+    Computes ratio for each group and merges the new data with the original DataFrame.
+
+    Args:
+        original_df (DataFrame): Original DataFrame.
+        new_df (DataFrame): New DataFrame with group and total column data.
+        groups (list): List of groups for which to compute ratios.
+        total_column_name (str): The name of the total column.
+
+    Returns:
+        DataFrame: The merged DataFrame with computed ratio columns.
+    """
+    # calculate ratio for each group
     for group in groups:
         new_df[f'{group}_ratio'] = new_df[group] / new_df[total_column_name]
 
-    # Keep only the ratio columns
+    # keep only the ratio columns
     ratio_columns = [f'{group}_ratio' for group in groups]
     new_df = new_df[['borough_code'] + ratio_columns]
 
-    # Merge with original dataframe
+    # merge with original dataframe
     merged_df = original_df.merge(new_df, on='borough_code', how='left')
     
     return merged_df
@@ -486,26 +496,40 @@ def _compute_ratios_and_merge(original_df, new_df, groups, total_column_name):
 
 
 def _melte_and_merge(original_df, new_df, total_col, value_col, groupby_col, compute_stats):
-# Get rid of the string part in column names and convert them to integers
+    """
+    Transforms and merges a new DataFrame with the original DataFrame.
+
+    Args:
+        original_df (DataFrame): Original DataFrame.
+        new_df (DataFrame): New DataFrame with value and total columns.
+        total_col (str): The name of the total column in new_df.
+        value_col (str): The name of the value column to be created.
+        groupby_col (str): The column to group by.
+        compute_stats (func): Function to compute statistics on grouped data.
+
+    Returns:
+        DataFrame: The merged DataFrame with computed statistics.
+    """
     value_cols = new_df.columns[2:].str.replace(f'{value_col}_', '').astype(int)
     new_df.columns = list(new_df.columns[:2]) + list(value_cols)
 
-    # Melt the dataframe to have values in one column and their frequencies in another
+    # melt the dataframe to have values in one column and their frequencies in another
     melted_df = new_df.melt(id_vars=[groupby_col, total_col], var_name=value_col, value_name='frequency')
     melted_df[value_col] = melted_df[value_col].astype(int)
 
-    # Group by borough and apply function
+    # group by borough and apply function
     value_stats = melted_df.groupby(groupby_col).apply(compute_stats)
 
-    # Merge with original dataframe
+    # merge with original dataframe
     merged_df = original_df.merge(value_stats, left_on=groupby_col, right_index=True, how='left')
     
     return merged_df
 
 
-
-# Functions to compute specific statistics
 def _compute_age_stats(df):
+    """
+    Computes specific age statistics - mean, 25th percentile and 75th percentile - from a DataFrame.
+    """
     # Replicate each age value according to its frequency
     ages = np.repeat(df['age'], df['frequency'])
 
@@ -518,3 +542,26 @@ def _compute_age_stats(df):
                       'age_25_percentile': age_25_percentile, 
                       'age_75_percentile': age_75_percentile})
 
+
+
+def map_journey_borough_data(start_date, end_date, journey_df, borough_df, date_for_filename):
+    """
+    Maps borough data to filtered journey data by date, and saves the preprocessed and mapped data to csv files.
+
+    Args:
+        start_date (str): The start date filter.
+        end_date (str): The end date filter.
+        journey_df (DataFrame): DataFrame with journey data.
+        borough_df (DataFrame): DataFrame with borough data.
+        date_for_filename (str): The date to be included in the filename of the saved csv files.
+
+    Returns:
+        None
+    """
+    journey_df = preprocess.filter_date(journey_df, start_date, end_date)
+
+    journey_df_mapped_start = journey_df.merge(borough_df, left_on='start_borough', right_on='borough', how='left')
+    journey_df_mapped_end = journey_df_mapped_start.merge(borough_df, left_on='end_borough', right_on='borough', how='left', suffixes=('_start', '_end'))
+
+    journey_df_mapped_start.to_csv(f'../data/interim/journey_data_cleaned_featureeng_startboroughmapping_{date_for_filename}.csv')
+    journey_df_mapped_end.to_csv(f'../data/interim/journey_data_cleaned_featureeng_endboroughmapping_{date_for_filename}.csv')
