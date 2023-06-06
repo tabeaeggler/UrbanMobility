@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 def correlation_plot(df, title):
@@ -22,7 +23,7 @@ def correlation_plot(df, title):
     # create the correlation plot
     sns.set(style="white")
     plt.figure(figsize=(14, 10))
-    sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", linewidths=0.5)
+    sns.heatmap(np.around(correlation_matrix, decimals=2), annot=True, cmap="coolwarm", linewidths=0.5)
     plt.title(title)
 
     return plt

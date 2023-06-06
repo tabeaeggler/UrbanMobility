@@ -24,8 +24,8 @@ def add_yearly_demands(borough_df, journey_df):
     borough_df.reset_index(drop=True, inplace=True)
 
     # calculate standardized demand
-    borough_df['demand_stand_19_start_borough'] = borough_df['demand_19_start_borough'] / borough_df['bike_station_counts']
-    borough_df['demand_stand_19_end_borough'] = borough_df['demand_19_end_borough'] / borough_df['bike_station_counts']
+    borough_df['demand_stand_19_start_borough'] = borough_df['demand_19_start_borough'] / borough_df['bike_docks_counts']
+    borough_df['demand_stand_19_end_borough'] = borough_df['demand_19_end_borough'] / borough_df['bike_docks_counts']
 
     return borough_df
 
@@ -46,7 +46,7 @@ def scatterplot_borough_charactersitics(borough_df, demand_var, title):
 
     # define a function to find outliers
     def find_outliers(df, column1, column2):
-        df = df.copy()  # Make a copy to avoid modifying original df
+        df = df.copy() 
         df['Z_score1'] = zscore(df[column1])
         df['Z_score2'] = zscore(df[column2])
         outliers_df = df[(abs(df['Z_score1']) > 1.2) | (abs(df['Z_score2']) > 1.2)]
@@ -85,7 +85,7 @@ def scatterplot_borough_charactersitics(borough_df, demand_var, title):
 
         sns.scatterplot(x=var, y=demand_var, data=borough_df, ax=axs[i], color='purple', s=100)
         axs[i].set_xlabel(var, fontsize=20)
-        axs[i].set_ylabel('Demand Standardized', fontsize=20)
+        axs[i].set_ylabel('Demand', fontsize=20)
         axs[i].tick_params(axis='both', which='major', labelsize=16)
         axs[i].set_xlim(prefix_xrange[prefix])  # Set x-axis limits
 

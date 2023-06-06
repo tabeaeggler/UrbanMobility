@@ -4,7 +4,7 @@ import geopandas as gpd
 import branca.colormap as cm
 
 
-def bar_chart_stations_per_borough(color_dict, borough_counts):
+def bar_chart_stations_per_borough(color_dict, borough_stat_counts, borough_docks_counts):
     """
     This function creates a bar chart representing the number of bike stations per borough.
 
@@ -16,14 +16,24 @@ def bar_chart_stations_per_borough(color_dict, borough_counts):
     Returns:
         plt (matplotlib.pyplot): A matplotlib object with the created bar chart.
     """
-    fig, ax = plt.subplots(figsize=(8, 6))
-    bars = ax.bar(borough_counts.index, borough_counts.values, color=[color_dict[borough] for borough in borough_counts.index], alpha=0.75)
 
-    ax.set_title('Number of Bike Stations per Borough')
-    ax.set_ylabel('Number of Stations')
+    fig = plt.figure(figsize=(18, 6))
+
+    # First subplot
+    ax1 = fig.add_subplot(1, 2, 1)
+    bars = ax1.bar(borough_stat_counts.index, borough_stat_counts.values, color=[color_dict[borough] for borough in borough_stat_counts.index], alpha=0.75)
+    ax1.set_title('Number of Bike Stations per Borough')
+    ax1.set_ylabel('Number of Stations')
     plt.xticks(rotation=45, ha='right')
+    plt.subplots_adjust(bottom=0.3, wspace=0.5)
 
-    plt.subplots_adjust(bottom=0.3)
+    # Second subplot
+    ax2 = fig.add_subplot(1, 2, 2)
+    ax2.scatter(borough_docks_counts, borough_stat_counts)
+    ax2.set_title('Number of Bike Stations vs Docks per Borough')
+    ax2.set_ylabel('Number of Stations')
+    ax2.set_xlabel('Number of Docks')
+
 
     return plt
 
@@ -88,6 +98,23 @@ def count_stations_per_borough(bike_locs):
 
     borough_counts = bike_locs.groupby('borough').size()
     borough_counts = borough_counts.sort_values(ascending=False)
+
+    return borough_counts
+
+
+def count_docks_per_borough(bike_locs):
+    """
+    Count the number of docks per borough.
+
+    Args:
+        bike_locs (pandas.DataFrame): DataFrame containing bike station data.
+
+    Returns:
+        pandas.Series: Series containing the number of docks per borough, sorted in descending order.
+
+    """
+
+    borough_counts = bike_locs.groupby('borough')['nr_of_docks'].sum()
 
     return borough_counts
 

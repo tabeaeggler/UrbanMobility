@@ -327,9 +327,16 @@ def add_borough_demographic_features(bike_locs, features_to_add):
     borough_df = borough_df.reset_index()
     borough_df.columns = ['borough', 'bike_station_counts']
 
+    # add bike docks counts per borough
+    docks = vis_stations.count_docks_per_borough(bike_locs)
+    docks = docks.reset_index()
+    docks.columns = ['borough', 'bike_docks_counts']
+    borough_df = borough_df.merge(docks, on='borough', how='left')
+
     # add borough codes
     borough_codes = pd.read_csv('../data/external/borough_code_mapping.csv')
     borough_df = borough_df.merge(borough_codes, on='borough', how='left')
+
 
     # add additional demographic features
     if 'TS006' in features_to_add:
@@ -559,9 +566,5 @@ def map_journey_borough_data(start_date, end_date, journey_df, borough_df, date_
         None
     """
     journey_df = preprocess.filter_date(journey_df, start_date, end_date)
-
     journey_df_mapped_start = journey_df.merge(borough_df, left_on='start_borough', right_on='borough', how='left')
-    journey_df_mapped_end = journey_df_mapped_start.merge(borough_df, left_on='end_borough', right_on='borough', how='left', suffixes=('_start', '_end'))
-
     journey_df_mapped_start.to_csv(f'../data/interim/journey_data_cleaned_featureeng_startboroughmapping_{date_for_filename}.csv')
-    journey_df_mapped_end.to_csv(f'../data/interim/journey_data_cleaned_featureeng_endboroughmapping_{date_for_filename}.csv')
