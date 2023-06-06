@@ -567,4 +567,4 @@ def map_journey_borough_data(start_date, end_date, journey_df, borough_df, date_
     """
     journey_df = preprocess.filter_date(journey_df, start_date, end_date)
     journey_df_mapped_start = journey_df.merge(borough_df, left_on='start_borough', right_on='borough', how='left')
-    journey_df_mapped_start.to_csv(f'../data/interim/journey_data_cleaned_featureeng_startboroughmapping_{date_for_filename}.csv')
+    journey_df_mapped_start.to_csv(f'../data/processed/journey_data_{date_for_filename}.csv')
