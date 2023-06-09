@@ -58,12 +58,12 @@ def aggregate_demand_hourly(journey_train, journey_test, standardise = False):
     x_train = journey_train_hourly.drop(columns=cols_to_remove)
     x_test = journey_test_hourly.drop(columns=cols_to_remove)
 
-    return (x_train, y_train, x_test, y_test, journey_train_hourly)
+    return (x_train, y_train, journey_train_hourly, x_test, y_test, journey_test_hourly)
 
 
 def random_forest_fit_pred(x_train, y_train, x_test):
 
-    rf = RandomForestRegressor(n_estimators=2, random_state=42)
+    rf = RandomForestRegressor(n_estimators=400, random_state=42)
 
     rf.fit(x_train, y_train)
     y_pred = rf.predict(x_test)
@@ -73,7 +73,7 @@ def random_forest_fit_pred(x_train, y_train, x_test):
 def gradient_boosting_fit_pred(x_train, y_train, x_test):
     from sklearn.ensemble import GradientBoostingRegressor
 
-    gb = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, random_state=42)
+    gb = GradientBoostingRegressor(n_estimators=400, learning_rate=0.1, random_state=42)
 
     gb.fit(x_train, y_train)
     y_pred = gb.predict(x_test)
@@ -120,7 +120,7 @@ def evaluation_vis(y_test, y_pred, x_train):
     axs[0, 1].set_title('Residuals vs Predicted')
 
     # Plot 3: Histogram of Residuals
-    axs[1, 0].hist(residuals, bins=30)
+    axs[1, 0].hist(residuals, bins=60)
     axs[1, 0].axvline(0, color='k', linestyle='--', lw=4)
     axs[1, 0].set_xlabel('Residuals')
     axs[1, 0].set_ylabel('Frequency')
@@ -130,7 +130,7 @@ def evaluation_vis(y_test, y_pred, x_train):
     sns.boxplot(x='hour', y='demand', data=x_train, ax=axs[1, 1])
     axs[1, 1].set_title('Boxplot of demand by hour')
     axs[1, 1].set_xlabel('Hour of the day')
-    axs[1, 1].set_ylabel('Demand')
+    axs[1, 1].set_ylabel('demand')
     axs[1, 1].set_xticks(range(24))
 
     # Plot 5: Actual vs Predicted Comparison
