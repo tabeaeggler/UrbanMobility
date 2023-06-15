@@ -64,34 +64,12 @@ def get_season(month):
     
 
 
-def clean_enhance_weather_data(weather_df):
-    """
-    This function cleans and enhances the weather dataframe by adding a new 
-    column for daylight hours and replacing NaN values with zero.
-
-    Parameters:
-    weather_df (pd.DataFrame): The original weather dataframe.
-
-    Returns:
-    weather_df (pd.DataFrame): The cleaned and enhanced weather dataframe.
-    """
-
-    # add daylight_hours
-    weather_df['sunrise'] = pd.to_datetime(weather_df['sunrise'])
-    weather_df['sunset'] = pd.to_datetime(weather_df['sunset'])
-    weather_df['daylight_hours'] = (weather_df['sunset'] - weather_df['sunrise']).dt.total_seconds()/ 3600
-    weather_df = weather_df.drop(columns=['sunrise', 'sunset'])
-
-    # replace NaN by 0
-    weather_df = weather_df.fillna(0)
-
-    return weather_df
 
 
 
 def merge_weather_journey_data(journey_df, weather_df):
     """
-    This function merges the journey data and weather data on the date.
+    This function merges the journey data and weather data on the date and hour.
 
     Args:
         journey_df (pd.DataFrame): A pandas dataframe containing the journey data.
@@ -101,16 +79,17 @@ def merge_weather_journey_data(journey_df, weather_df):
         journey_df (pd.DataFrame): A pandas dataframe after merging journey and weather data.
     """
 
-    # add a new column 'start_date_only' in journey data that only contains the date part of the 'start_date' column
-    journey_df['start_date_only'] = journey_df['start_date'].dt.date
+    # add a new column 'start_date_hour' in journey data that contains the date and hour part of the 'start_date' column
+    journey_df['start_date_hour'] = journey_df['start_date'].dt.floor('H')
 
-    # merge the journey data with the weather data on the date
-    journey_df = pd.merge(journey_df, weather_df, left_on='start_date_only', right_index=True, how='left')
+    # merge the journey data with the weather data on the date and hour
+    journey_df = pd.merge(journey_df, weather_df, left_on='start_date_hour', right_index=True, how='left')
     
-    # drop the 'start_date_only' column as it's not needed anymore
-    journey_df.drop(columns=['start_date_only'], inplace=True)
+    # drop the 'start_date_hour' column as it's not needed anymore
+    journey_df.drop(columns=['start_date_hour'], inplace=True)
     
     return journey_df
+
 
 
 
@@ -567,4 +546,4 @@ def map_journey_borough_data(start_date, end_date, journey_df, borough_df, date_
     """
     journey_df = preprocess.filter_date(journey_df, start_date, end_date)
     journey_df_mapped_start = journey_df.merge(borough_df, left_on='start_borough', right_on='borough', how='left')
-    journey_df_mapped_start.to_csv(f'../data/processed/journey_data_{date_for_filename}.csv')
+    journey_df_mapped_start.to_csv(f'../data/processed/journey_data_clean_featureeng/journey_data_{date_for_filename}.csv')
