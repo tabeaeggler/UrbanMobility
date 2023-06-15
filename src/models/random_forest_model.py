@@ -41,7 +41,7 @@ def train_test_split(agg_journey_train, agg_journey_test, standardise = False):
 
 def random_forest_fit_pred(x_train, y_train, x_test):
 
-    rf = RandomForestRegressor(n_estimators=400, random_state=42)
+    rf = RandomForestRegressor(n_estimators=200, random_state=42)
 
     rf.fit(x_train, y_train)
     y_pred = rf.predict(x_test)
