@@ -281,7 +281,7 @@ def hyper_param_tuning(x_train, y_train, n_iter, n_splits):
 
 
 
-def visualize_random_search_rf(random_search):
+def visualize_random_search_rf(random_search, title):
     # Define the features and their corresponding parameter ranges
     features = ['n_estimators', 'max_depth', 'min_samples_split', 'min_samples_leaf']
     param_ranges = [(100, 1000), (5, 20), (2, 10), (1, 10)]
@@ -289,32 +289,29 @@ def visualize_random_search_rf(random_search):
     # Get the parameter combinations, scores, and fit times
     params = random_search.cv_results_['params']
     scores = random_search.cv_results_['mean_test_score']
-    fit_times = random_search.cv_results_['mean_fit_time']
+
+    # Get the indices that would sort the scores
+    sorted_indices = np.argsort(scores)
 
     # Create subplots for each feature
-    fig, axs = plt.subplots(nrows=len(features), ncols=2, figsize=(8, 4*len(features)))
+    fig, axs = plt.subplots(nrows=1, ncols=len(features), figsize=(4*len(features), 4))
 
-    # Plot feature vs score and feature vs training time for each feature
+    # Plot feature vs score for each feature
     for i, feature in enumerate(features):
+        # Get the feature values and sort them according to the sorted_indices
         feature_values = [param[feature] for param in params]
+        sorted_feature_values = [feature_values[i] for i in sorted_indices]
+        sorted_scores = [scores[i] for i in sorted_indices]
 
         # Plot feature vs score
-        ax1 = axs[i, 0]
-        ax1.plot(feature_values, scores, marker='o')
-        ax1.set_xlabel(feature)
-        ax1.set_ylabel('Score')
-        ax1.set_title(f'{feature} vs Score')
-        ax1.grid(True)
-
-        # Plot feature vs training time
-        ax2 = axs[i, 1]
-        ax2.plot(feature_values, fit_times, marker='o', color='orange')
-        ax2.set_xlabel(feature)
-        ax2.set_ylabel('Training Time (s)')
-        ax2.set_title(f'{feature} vs Training Time')
-        ax2.grid(True)
+        ax = axs[i]  # change this line
+        ax.scatter(sorted_feature_values, sorted_scores, marker='o')
+        ax.set_xlabel(feature)
+        ax.set_ylabel('Score')
+        ax.grid(True)
 
     plt.tight_layout()
+    fig.suptitle(title, y=1.05)
     plt.show()
 
 
