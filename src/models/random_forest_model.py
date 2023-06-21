@@ -20,14 +20,14 @@ def train_test_split(agg_journey_train, agg_journey_test, standardise = False):
         y_train = agg_journey_train['demand_per_dock']
         y_test = agg_journey_test['demand_per_dock']
 
-        cols_to_remove = ['rental_id', 'end_date', 'end_borough', 'start_date', 'end_station_name', 'start_station_name', 'demand', 'borough', 'borough_code', 'year', 'demand_per_dock']
+        cols_to_remove = ['demand_per_dock']
 
     else:
         # create the target variables
         y_train = agg_journey_train['demand']
         y_test = agg_journey_test['demand']
 
-        cols_to_remove = ['rental_id', 'end_date', 'end_borough', 'start_date', 'end_station_name', 'start_station_name', 'demand', 'borough', 'borough_code', 'year']
+        cols_to_remove = ['demand']
     
     # create the predictor variables
     x_train = agg_journey_train.drop(columns=cols_to_remove)

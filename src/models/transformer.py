@@ -34,7 +34,7 @@ class Transformer:
 
     def train(self, x_train, y_train, batch_size=32, epochs=3):
         model = self.create_transformer(x_train.shape[1:])
-        model.compile(optimizer=Adam(), loss='mean_squared_error') 
+        model.compile(optimizer=Adam(), loss='mae') 
 
         model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs)
 
