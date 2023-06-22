@@ -3,8 +3,12 @@ from keras.layers import Input, Dense, Dropout, LayerNormalization
 from keras.layers import MultiHeadAttention, Flatten
 from keras.optimizers import Adam
 
+#https://www.tensorflow.org/text/tutorials/transformer
+#https://keras.io/examples/timeseries/timeseries_transformer_classification/
+
+
 class Transformer:
-    def __init__(self, num_heads=8, dropout_rate=0.1, num_layers=2):
+    def __init__(self, num_heads=8, dropout_rate=0.1, num_layers=4):
         self.num_heads = num_heads
         self.dropout_rate = dropout_rate
         self.num_layers = num_layers
@@ -19,6 +23,7 @@ class Transformer:
             attn_output = Dropout(self.dropout_rate)(attn_output)
             out1 = LayerNormalization(epsilon=1e-6)(x + attn_output)
 
+
             # Feed-forward and normalization
             ffn_output = Dense(input_shape[-1], activation='relu')(out1)
             ffn_output = Dense(input_shape[-1])(ffn_output)
@@ -28,11 +33,11 @@ class Transformer:
             x = out2
 
         x = Flatten()(x)
-        outputs = Dense(1)(x) 
+        outputs = Dense(1)(x) # flatten and dense layer to produce scalar output -> encoder-only
 
         return Model(inputs=inputs, outputs=outputs)
 
-    def train(self, x_train, y_train, batch_size=32, epochs=3):
+    def train(self, x_train, y_train, batch_size=32, epochs=2):
         model = self.create_transformer(x_train.shape[1:])
         model.compile(optimizer=Adam(), loss='mae') 
 
