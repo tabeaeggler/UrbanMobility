@@ -145,3 +145,18 @@ def get_feature_importance(rf, x_train):
     feature_importances = feature_importances.sort_values('Importance', ascending=False)
 
     return feature_importances
+
+
+
+def loss_curve(history, title):
+    plt.figure(figsize=(7, 5))
+    plt.plot(history.history['loss'], 'b', linewidth=2)
+    plt.plot(history.history['val_loss'], 'orange', linewidth=2)
+    plt.legend(['Training Loss', 'Validation Loss'], fontsize=10)
+    plt.title(title, fontsize=12)
+    plt.xlabel('Epoch', fontsize=10)
+    plt.ylabel('Loss', fontsize=10)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.show()
+    
