@@ -114,15 +114,16 @@ def add_ma_lag_features(journey_train, journey_test):
 
 
 def remove_borough_characteristics(journey_train, journey_test):
+    demand = ['demand']
     temporal_features = ['hour', 'part_of_day', 'day_of_week', 'day_of_month', 'day_of_year', 'is_weekend', 'month', 'season', 'bank_holiday']
     weather_features = ['temp', 'feelslike', 'humidity', 'dew', 'precip', 'windgust', 'windspeed', 'cloudcover', 'visibility', 'uvindex']
-    borough_features = journey_train.columns[~journey_train.columns.isin(temporal_features) & ~journey_train.columns.isin(weather_features)]
+    borough_features = journey_train.columns[~journey_train.columns.isin(temporal_features) & ~journey_train.columns.isin(weather_features) & ~journey_train.columns.isin(demand)]
 
     # filter out borough characteristics, keep only temporal and weather features
     journey_train_without_borough_characteristics = journey_train.drop(borough_features, axis=1)
-    journey_train_without_borough_characteristics = journey_test.drop(borough_features, axis=1)
+    journey_test_without_borough_characteristics = journey_test.drop(borough_features, axis=1)
 
-    return (journey_train_without_borough_characteristics, journey_train_without_borough_characteristics)
+    return (journey_train_without_borough_characteristics, journey_test_without_borough_characteristics)
 
 
 
