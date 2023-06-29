@@ -22,23 +22,58 @@ def create_train_test_data(journey_train_scaled, journey_test_scaled, lookback):
     X_test = []
     Y_test = []
 
-    # No need to loop through each borough. We'll use all the data directly.
-    borough_data_train = journey_train_scaled.values
-    borough_data_test = journey_test_scaled.values
+    boroughs = ['Westminster', 'Tower Hamlets', 'Kensington and Chelsea', 'Camden', 'Hammersmith and Fulham', 'Lambeth', 'Wandsworth', 'Southwark', 
+                'Hackney', 'City of London', 'Islington', 'Newham']
 
-    for i in range(lookback, len(borough_data_train)):
-        X_train.append(borough_data_train[i-lookback:i, :])
-        Y_train.append(borough_data_train[i, demand_index])  
+    borough_indices = [journey_train_scaled.columns.get_loc('start_borough_' + borough) for borough in boroughs]
 
-    for i in range(lookback, len(borough_data_test)):
-        X_test.append(borough_data_test[i-lookback:i, :])
-        Y_test.append(borough_data_test[i, demand_index])  
+    # Convert dataframes to numpy arrays
+    journey_train_scaled = journey_train_scaled.values
+    journey_test_scaled = journey_test_scaled.values
 
-    # convert lists to numpy arrays
+    for i in range(len(journey_train_scaled)):
+        X_train_temp = [] # create a temporary list to store the current sequence
+        current_borough = np.argmax(journey_train_scaled[i, borough_indices]) # identify the borough of the current data point
+        X_train_temp.append(journey_train_scaled[i]) # add the current data point to the sequence
+
+        for j in range(i+1, len(journey_train_scaled)): # iterate over the rest of the data points starting from the next data point
+            if np.argmax(journey_train_scaled[j, borough_indices]) == current_borough: # if the borough of the current data point (j) is the same as the borough of the initial data point (i)
+                X_train_temp.append(journey_train_scaled[j]) # add the current data point (j) to the sequence
+                if len(X_train_temp) == lookback + 1: # if the sequence has reached the desired length (lookback + 1)
+                    X_train.append(np.array(X_train_temp[:-1])) # add the sequence (excluding the last data point) to the training input data
+                    Y_train.append(journey_train_scaled[i+lookback, demand_index]) # ddd the demand of the last data point in the sequence to the training output data
+                    break # break the inner loop as we have collected a complete sequence for training
+
+    for i in range(len(journey_test_scaled)):
+        X_test_temp = []
+        current_borough = np.argmax(journey_test_scaled[i, borough_indices])
+        X_test_temp.append(journey_test_scaled[i])
+        
+        for j in range(i+1, len(journey_test_scaled)):
+            if np.argmax(journey_test_scaled[j, borough_indices]) == current_borough:
+                X_test_temp.append(journey_test_scaled[j])
+                if len(X_test_temp) == lookback + 1:
+                    X_test.append(np.array(X_test_temp[:-1])) #exclude the last one
+                    Y_test.append(journey_test_scaled[i+lookback, demand_index])
+                    break
+
+    # Convert lists to numpy arrays
     X_train, Y_train = np.array(X_train), np.array(Y_train)
     X_test, Y_test = np.array(X_test), np.array(Y_test)
 
+    # Return arrays
     return X_train, Y_train, X_test, Y_test
+
+
+
+
+
+
+
+
+
+
+
 
 
 
