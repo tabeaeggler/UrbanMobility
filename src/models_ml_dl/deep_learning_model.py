@@ -13,40 +13,33 @@ from keras.callbacks import EarlyStopping
 
  # Borough-specific Multi-series LSTM model -> single LSTM model on multiple time series (one for each borough).
  # This is a Borough-specific Multi-series LSTM model designed to forecast bike sharing demand for each borough in London separately. By treating each borough's data as an individual time series, the model can learn unique temporal patterns specific to each borough, potentially providing more accurate predictions.
-def create_train_test_data(total_df, journey_train, journey_test, journey_train_scaled, journey_test_scaled, lookback):
-
-    demand_index = total_df.columns.get_loc('demand')
+def create_train_test_data(journey_train_scaled, journey_test_scaled, lookback):
+    # index is last element of journey_train_scaled
+    demand_index = journey_train_scaled.columns.get_loc('demand')
+    
     X_train = []
     Y_train = []
     X_test = []
     Y_test = []
 
-    boroughs = ['Westminster', 'Tower Hamlets', 'Kensington and Chelsea', 'Camden', 'Hammersmith and Fulham', 'Lambeth', 'Wandsworth', 'Southwark', 
-                'Hackney', 'City of London', 'Islington', 'Newham']
+    # No need to loop through each borough. We'll use all the data directly.
+    borough_data_train = journey_train_scaled.values
+    borough_data_test = journey_test_scaled.values
 
-    for borough in boroughs:
-        mask_train = journey_train['start_borough_' + borough] == 1
-        mask_test = journey_test['start_borough_' + borough] == 1
-        
-        borough_data_train = journey_train_scaled[mask_train.values]
-        borough_data_test = journey_test_scaled[mask_test.values]
-        
-        for i in range(lookback, len(borough_data_train)):
-            X_train.append(borough_data_train[i-lookback:i, :])
-            # We want to predict demand so the output should be from the 'demand' column
-            Y_train.append(borough_data_train[i, demand_index])  
+    for i in range(lookback, len(borough_data_train)):
+        X_train.append(borough_data_train[i-lookback:i, :])
+        Y_train.append(borough_data_train[i, demand_index])  
 
-        for i in range(lookback, len(borough_data_test)):
-            X_test.append(borough_data_test[i-lookback:i, :])
-            # We want to predict demand so the output should be from the 'demand' column
-            Y_test.append(borough_data_test[i, demand_index])  
+    for i in range(lookback, len(borough_data_test)):
+        X_test.append(borough_data_test[i-lookback:i, :])
+        Y_test.append(borough_data_test[i, demand_index])  
 
-    # Convert your lists to numpy arrays
+    # convert lists to numpy arrays
     X_train, Y_train = np.array(X_train), np.array(Y_train)
     X_test, Y_test = np.array(X_test), np.array(Y_test)
 
-    # Print shapes
     return X_train, Y_train, X_test, Y_test
+
 
 
 def create_lstm(X_train, units):
