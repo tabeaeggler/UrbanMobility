@@ -48,7 +48,7 @@ def create_train_test_data(journey_train_scaled, journey_test_scaled, lookback):
         X_test_temp = []
         current_borough = np.argmax(journey_test_scaled[i, borough_indices])
         X_test_temp.append(journey_test_scaled[i])
-        
+
         for j in range(i+1, len(journey_test_scaled)):
             if np.argmax(journey_test_scaled[j, borough_indices]) == current_borough:
                 X_test_temp.append(journey_test_scaled[j])
@@ -70,20 +70,22 @@ def create_train_test_data(journey_train_scaled, journey_test_scaled, lookback):
 
 
 
-
-
-
-
-
-
-
-def create_lstm(X_train, units):
+def create_lstm(X_train, units, dropout):
     lstm_model = Sequential()
-    lstm_model.add(LSTM(units=units, return_sequences= True, input_shape=(X_train.shape[1], X_train.shape[2]))) 
-    lstm_model.add(LSTM(units=units, return_sequences= True))
+    # first lstm layer
+    lstm_model.add(LSTM(units=units, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
+    lstm_model.add(Dropout(dropout))
+    # second lstm layer
+    lstm_model.add(LSTM(units=units, return_sequences=True))
+    lstm_model.add(Dropout(dropout))
+    # third lstm layer
     lstm_model.add(LSTM(units=units))
+    lstm_model.add(Dropout(dropout))
+    # output layer
     lstm_model.add(Dense(units=1))
     return lstm_model
+
+
 
 
 def transform_to_original_sclae(total_df, lstm_pred, Y_test, input_data, scaler):
