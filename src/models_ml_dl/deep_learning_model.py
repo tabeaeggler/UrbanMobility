@@ -67,9 +67,6 @@ def create_train_test_data(journey_train_scaled, journey_test_scaled, lookback):
 
 
 
-
-
-
 def create_lstm(X_train, units, dropout):
     lstm_model = Sequential()
     # first lstm layer
@@ -79,6 +76,9 @@ def create_lstm(X_train, units, dropout):
     lstm_model.add(LSTM(units=units, return_sequences=True))
     lstm_model.add(Dropout(dropout))
     # third lstm layer
+    lstm_model.add(LSTM(units=units, return_sequences=True))
+    lstm_model.add(Dropout(dropout))
+    # forth lstm layer
     lstm_model.add(LSTM(units=units))
     lstm_model.add(Dropout(dropout))
     # output layer
@@ -141,7 +141,7 @@ class Transformer:
 
         early_stopping = EarlyStopping(
             monitor='val_loss', 
-            patience=4,
+            patience=8,
             restore_best_weights=True
         )
 
