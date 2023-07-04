@@ -6,6 +6,8 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Dropout
 from keras.callbacks import EarlyStopping
+from keras.regularizers import l2
+from keras.callbacks import ModelCheckpoint
 
 #https://www.tensorflow.org/text/tutorials/transformer
 #https://keras.io/examples/timeseries/timeseries_transformer_classification/
@@ -67,7 +69,7 @@ def create_train_test_data(journey_train_scaled, journey_test_scaled, lookback):
 
 
 
-def create_lstm(X_train, units, dropout):
+def create_lstm(X_train, units, dropout, reg):
     lstm_model = Sequential()
     # first lstm layer
     lstm_model.add(LSTM(units=units, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
@@ -79,6 +81,9 @@ def create_lstm(X_train, units, dropout):
     lstm_model.add(LSTM(units=units, return_sequences=True))
     lstm_model.add(Dropout(dropout))
     # forth lstm layer
+    #lstm_model.add(LSTM(units=units, return_sequences=True, kernel_regularizer=l2(reg)))
+    #lstm_model.add(Dropout(dropout))
+    # fifth lstm layer
     lstm_model.add(LSTM(units=units))
     lstm_model.add(Dropout(dropout))
     # output layer
@@ -141,8 +146,18 @@ class Transformer:
 
         early_stopping = EarlyStopping(
             monitor='val_loss', 
-            patience=8,
+            patience=10,
             restore_best_weights=True
+        )
+
+        # Create a ModelCheckpoint callback
+        checkpoint = ModelCheckpoint(
+            "./transformer_model_epoch_{epoch}.h5",  
+            monitor="val_loss",  
+            verbose=1,  
+            save_best_only=False, 
+            mode="auto",  
+            save_freq="epoch",
         )
 
         history = model.fit(
@@ -150,8 +165,8 @@ class Transformer:
             y_train, 
             batch_size=batch_size, 
             epochs=epochs, 
-            validation_split=validation_split,  # Use 20% of data for validation
-            callbacks=[early_stopping]  # Use EarlyStopping
+            validation_split=validation_split, 
+            callbacks=[early_stopping, checkpoint]
         )
 
         self.model = model
