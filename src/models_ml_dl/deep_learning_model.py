@@ -8,6 +8,7 @@ from keras.layers import LSTM, Dense, Dropout
 from keras.callbacks import EarlyStopping
 from keras.regularizers import l2
 from keras.callbacks import ModelCheckpoint
+from sklearn.preprocessing import MinMaxScaler
 
 #https://www.tensorflow.org/text/tutorials/transformer
 #https://keras.io/examples/timeseries/timeseries_transformer_classification/
@@ -65,6 +66,27 @@ def create_train_test_data(journey_train_scaled, journey_test_scaled, lookback):
 
     # Return arrays
     return X_train, Y_train, X_test, Y_test
+
+
+
+def min_max_scaling(journey_train, journey_test, journey_train_orig, journey_test_orig):
+    # initialize the scaler
+    scaler = MinMaxScaler(feature_range=(0, 1))
+
+    # fit the scaler using the training data and transform the training and test data
+    journey_train_scaled = scaler.fit_transform(journey_train)
+    journey_test_scaled = scaler.transform(journey_test)
+
+    # convert back to DataFrame
+    journey_train_scaled = pd.DataFrame(journey_train_scaled, columns=journey_train.columns)
+    journey_test_scaled = pd.DataFrame(journey_test_scaled, columns=journey_test.columns)
+
+    # add the target feature back
+    journey_train_scaled['demand'] = journey_train_orig['demand'].values
+    journey_test_scaled['demand'] = journey_test_orig['demand'].values
+
+    return journey_train_scaled, journey_test_scaled
+
 
 
 
