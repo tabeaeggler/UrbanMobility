@@ -18,7 +18,6 @@ def ale_plot(x_test, ale_exp, selected_features, height, spacing, title, large_s
 
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(20, height))
 
-    # Flatten the axes array in case it's 2D (when you have more than one row)
     axs = axs.flatten()
 
     for ax, feature_index in zip(axs, selected_feature_indices):
@@ -68,6 +67,7 @@ def permutation_tree(model, x_data, y_data):
     feature_importances.sort(key=lambda x: x[1], reverse=True)
 
     return feature_importances
+
 
 
 def create_shap(model, x_data, filename_expl, filename_val):
@@ -128,10 +128,6 @@ def plot_boroughs_bar(shap_values, x_data, boroughs, global_min, global_max, fil
 
     # Get the indices in the shap_values where each borough is true
     borough_indices = {borough: np.where(x_data['start_borough_' + borough] == 1)[0] for borough in boroughs}
-
-    # Calculate the global min and max SHAP values
-    global_min = 0
-    global_max = 800
 
     for i, (borough, indices) in enumerate(borough_indices.items()):
         # Select only the rows for this borough
