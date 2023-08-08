@@ -1,7 +1,6 @@
 import numpy as np
 from alibi.explainers import ALE, plot_ale
 import matplotlib.pyplot as plt
-import pandas as pd
 from sklearn.inspection import permutation_importance
 import shap
 import pickle

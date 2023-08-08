@@ -1,7 +1,7 @@
 # UrbanMobility: Master Thesis by Tabea Eggler
 
 ## Introduction
-This repository contains code related to the master thesis project on Urban Mobility by Tabea Eggler.
+This repository contains code related to the master thesis project "Interpretable Machine Learning and Deep Learning for Evaluating Demographic Influences on Bike Sharing Demand in London Boroughs" by Tabea Eggler.
 
 
 ## Project Structure
@@ -33,6 +33,3 @@ This directory structure is inspired by "Cookiecutter Data Science".
     │   ├── models         <- Scripts to train models and then use trained models to make predictions
     │   │
     │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-
-
---------

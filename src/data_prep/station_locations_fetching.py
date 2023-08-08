@@ -7,6 +7,7 @@ def get_station_locations():
     """
     Retrieve bike station locations from the TFL (Transport for London) API.
 
+
     Returns:
         pandas.DataFrame: A DataFrame containing bike station locations with columns: 'id', 'name', 'lat', 'lon', 'docks'.
 

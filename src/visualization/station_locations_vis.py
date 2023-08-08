@@ -1,7 +1,6 @@
 import folium
 import matplotlib.pyplot as plt
 import geopandas as gpd
-import branca.colormap as cm
 
 
 def bar_chart_stations_per_borough(color_dict, borough_stat_counts, borough_docks_counts):

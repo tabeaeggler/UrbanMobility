@@ -93,7 +93,7 @@ def drop_duplicates(df):
     """
     Drop duplicate rows from a DataFrame, prioritizing rows with more non-null values.
 
-    Args:
+    Parameters:
         df (pandas.DataFrame): The DataFrame to remove duplicates from.
 
     Returns:

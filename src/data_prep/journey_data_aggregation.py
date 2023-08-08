@@ -1,13 +1,21 @@
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import RandomizedSearchCV
-from scipy.stats import randint
-from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error, explained_variance_score
 import matplotlib.pyplot as plt
-import seaborn as sns
+
+
+
 
 def aggregate_demand(journey_df, aggregation_level):
+    """
+    Aggregate demand for journeys based on the specified aggregation level.
+    
+    Parameters:
+    journey_df (DataFrame): DataFrame containing the journey data.
+    aggregation_level (str): The level at which to aggregate demand, e.g., 'H', 'D', 'W', etc.
+    
+    Returns:
+    DataFrame: The aggregated journey data.
+    """
 
     journey_df = journey_df.copy()
 
@@ -35,6 +43,17 @@ def aggregate_demand(journey_df, aggregation_level):
 
 
 def clean_aggregated_df_hourly(agg_jounrey_df, borough_df, temporal_weather_features):
+    """
+    Clean and preprocess the aggregated journey data for hourly analysis.
+    
+    Parameters:
+    agg_jounrey_df (DataFrame): DataFrame containing the aggregated journey data.
+    borough_df (DataFrame): DataFrame containing borough-related features.
+    temporal_weather_features (list of str): List of weather features to consider for analysis.
+    
+    Returns:
+    DataFrame: The cleaned and preprocessed DataFrame.
+    """
 
     agg_jounrey_df = agg_jounrey_df.copy()
 
@@ -72,6 +91,15 @@ def clean_aggregated_df_hourly(agg_jounrey_df, borough_df, temporal_weather_feat
 
 
 def clean_aggregated_df_daily(agg_jounrey_df):
+    """
+    Clean and preprocess the aggregated journey data for daily analysis.
+    
+    Parameters:
+    agg_jounrey_df (DataFrame): DataFrame containing the aggregated journey data.
+    
+    Returns:
+    DataFrame: The cleaned and preprocessed DataFrame.
+    """
 
     agg_jounrey_df = agg_jounrey_df.copy()
 
@@ -87,6 +115,17 @@ def clean_aggregated_df_daily(agg_jounrey_df):
 
 
 def plot_demand_by_week_borough(df_1, df_2, df_3, df_4, borough):
+    """
+    Plot demand by week for the specified borough, considering different dataframes for comparison.
+    
+    Parameters:
+    df_1, df_2, df_3, df_4 (DataFrame): DataFrames containing journey data for different years.
+    borough (str): The name of the borough for which to plot demand.
+    
+    Returns:
+    DataFrame, DataFrame, DataFrame, DataFrame: Filtered DataFrames for each year specific to the given borough.
+    """
+        
     # Filter out the data for the specified borough
     borough_data_1 = df_1.loc[df_1[f'start_borough_{borough}'] == 1].copy()
     borough_data_2 = df_2.loc[df_2[f'start_borough_{borough}'] == 1].copy()

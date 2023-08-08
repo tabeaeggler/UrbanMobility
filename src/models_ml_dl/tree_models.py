@@ -4,6 +4,18 @@ from sklearn.model_selection import TimeSeriesSplit
 
 
 def train_test_split(agg_journey_train, agg_journey_test, standardise = False):
+    """
+    Splits the dataset into training and testing sets and optionally standardizes the demand per dock.
+
+    Parameters:
+        agg_journey_train (DataFrame): Training data containing journey information.
+        agg_journey_test (DataFrame): Testing data containing journey information.
+        standardise (bool, optional): Whether to standardize demand per dock. Defaults to False.
+
+    Returns:
+        tuple: x_train, y_train, x_test, y_test as DataFrames.
+    """
+
     if standardise:
         # standardise the demand per dock
         agg_journey_train['demand_per_dock'] = agg_journey_train['demand'] / agg_journey_train['bike_docks_counts']
@@ -31,6 +43,20 @@ def train_test_split(agg_journey_train, agg_journey_test, standardise = False):
 
 
 def hyper_param_tuning(model, x_train, y_train, n_iter, n_splits, param_grid):
+    """
+    Conducts hyperparameter tuning using RandomizedSearchCV and TimeSeriesSplit.
+
+    Parameters:
+        model: The machine learning model to tune.
+        x_train (DataFrame): Training feature data.
+        y_train (Series): Training target data.
+        n_iter (int): Number of parameter settings that are sampled.
+        n_splits (int): Number of splits for time series cross-validation.
+        param_grid (dict): Dictionary containing hyperparameters to tune.
+
+    Returns:
+        RandomizedSearchCV object: Fitted RandomizedSearchCV object containing information about the best parameters.
+    """
 
     tscv = TimeSeriesSplit(n_splits=n_splits)
 
@@ -42,6 +68,17 @@ def hyper_param_tuning(model, x_train, y_train, n_iter, n_splits, param_grid):
 
 
 def add_ma_lag_features(journey_train, journey_test):
+    """
+    Adds moving average (MA) and lagged demand features for specific boroughs.
+
+    Parameters:
+        journey_train (DataFrame): Training data containing journey information.
+        journey_test (DataFrame): Testing data containing journey information.
+
+    Returns:
+        tuple: journey_train_ma_lag, journey_test_ma_lag as DataFrames with added MA and lag features.
+    """
+
     borough_cols = ['start_borough_Hackney', 'start_borough_Islington', 'start_borough_City of London', 'start_borough_Westminster', 'start_borough_Tower Hamlets', 'start_borough_Kensington and Chelsea', 'start_borough_Camden', 'start_borough_Hammersmith and Fulham', 'start_borough_Lambeth', 'start_borough_Wandsworth', 'start_borough_Southwark', 'start_borough_Newham']
     journey_train_ma_lag = pd.DataFrame()
     journey_test_ma_lag = pd.DataFrame()
@@ -109,6 +146,17 @@ def add_ma_lag_features(journey_train, journey_test):
 
 
 def remove_borough_characteristics(journey_train, journey_test):
+    """
+    Removes characteristics related to specific boroughs, keeping only temporal and weather features.
+
+    Parameters:
+        journey_train (DataFrame): Training data containing journey and borough information.
+        journey_test (DataFrame): Testing data containing journey and borough information.
+
+    Returns:
+        tuple: journey_train_without_borough_characteristics, journey_test_without_borough_characteristics as DataFrames without borough-specific characteristics.
+    """
+    
     demand = ['demand']
     temporal_features = ['hour', 'part_of_day', 'day_of_week', 'day_of_month', 'day_of_year', 'is_weekend', 'month', 'season', 'bank_holiday']
     weather_features = ['temp', 'feelslike', 'humidity', 'dew', 'precip', 'windgust', 'windspeed', 'cloudcover', 'visibility', 'uvindex']
