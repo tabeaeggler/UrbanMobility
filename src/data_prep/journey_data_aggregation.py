@@ -197,7 +197,7 @@ def plot_demand_by_week_borough(df_1, df_2, df_3, df_4, borough):
         axs[idx, 1].legend(loc="upper right")
         axs[idx, 1].grid(True)
 
-    plt.savefig(f'../reports/figures/aggregated_demand_eda/{borough}_demand_by_week.jpg', dpi=300)
+    plt.savefig(f'../reports/figures/aggregated_demand_line_graphs/{borough}_demand_by_week.jpg', dpi=300)
     plt.show()
 
     return borough_data_1, borough_data_2, borough_data_3, borough_data_4

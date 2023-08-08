@@ -39,7 +39,7 @@ def feature_importance_stacked_barplot(df, fig_height=5):
 
     # Display the plot
     plt.tight_layout()
-    plt.savefig(f'../reports/figures/feature_importance/feature_importance_cat', dpi=300)
+    plt.savefig(f'../reports/figures/model_interpretation/feature_importance_cat', dpi=300)
     plt.show()
 
     
@@ -73,7 +73,7 @@ def top_8_features_plot(df_impurity, model):
 
     fig.suptitle(f'Impurity Feature Importance, Model {model}')
     plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
-    plt.savefig(f'../reports/figures/feature_importance/top_features_{model}', dpi=300)
+    plt.savefig(f'../reports/figures/model_interpretation/top_features_{model}', dpi=300)
     plt.show()
 
 
@@ -108,7 +108,7 @@ def ale_plot(x_test, ale_exp_1, ale_exp_2, selected_features, height, spacing, t
     plt.tight_layout()
     plt.subplots_adjust(top=spacing)
     plt.suptitle(f'ALE plot for {title}')
-    plt.savefig(f'../reports/figures/feature_importance/ale_{title}', dpi=300)
+    plt.savefig(f'../reports/figures/model_interpretation/ale_{title}', dpi=300)
     plt.show()
 
 
