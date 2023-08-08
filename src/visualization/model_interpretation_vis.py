@@ -1,14 +1,85 @@
 import numpy as np
 from alibi.explainers import ALE, plot_ale
 import matplotlib.pyplot as plt
+import pandas as pd
 from sklearn.inspection import permutation_importance
 import shap
 import pickle
 from PIL import Image
 from IPython.display import display
+import seaborn as sns
 
 
-def ale_plot(x_test, ale_exp, selected_features, height, spacing, title, large_scale_index):
+
+def feature_importance_stacked_barplot(df, fig_height=5):
+
+    colors = sns.color_palette('deep')[0:5]
+
+    # Transpose DataFrame for easier plotting
+    df = df.set_index('Features').T
+
+    # Create stacked horizontal bar chart
+    ax = df.plot(kind='barh', stacked=True, color=colors, edgecolor='black', linewidth=1.5, figsize=(18, fig_height))
+
+    # Setting labels
+    plt.xlabel('Importance')
+    plt.ylabel('Models')
+
+    # Setting title
+    plt.title('Impurity Feature Importance Attribution')
+
+    # Add percentages on top of bars
+    for p in ax.patches:
+        left, bottom, width, height = p.get_bbox().bounds
+        if width > 2:  # Only annotate when the width is greater than 5%
+            ax.annotate(f"{width:.1f}%", xy=(left+width/2, bottom+height/2), 
+                        xytext=(0,0), textcoords='offset points', ha='center', va='center')
+            
+    # Move the legend to the right side of the plot
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    # Display the plot
+    plt.tight_layout()
+    plt.savefig(f'../reports/figures/feature_importance/feature_importance_cat', dpi=300)
+    plt.show()
+
+    
+
+def top_8_features_plot(df_impurity, model):
+    other_feature = ['day_of_week', 'is_weekend', 'day_of_month', 'day_of_year', 'month', 'season', 'hour', 'part_of_day', 'bank_holiday', 'tempmax', 'tempmin', 'temp', 'feelslike', 'humidity', 'dew', 'precip', 'windgust', 'windspeed', 'cloudcover', 'visibility', 'uvindex', 'daylight_hours', 'bike_station_counts', 'bike_docks_counts', 'demand_ma_3h', 'demand_ma_8h', 'demand_ma_24h', 'demand_lag_1h', 'demand_lag_8h', 'demand_lag_24h', 'demand_lag_1w']
+    borough_features = [feature for feature in df_impurity['Feature'] if feature not in other_feature]
+
+
+    # Extract top 8 features
+    top_8_features = df_impurity.nlargest(8, 'Importance')
+
+    # Extract top 8 borough features
+    borough_df = df_impurity[df_impurity['Feature'].isin(borough_features)]
+    top_8_borough_features = borough_df.nlargest(8, 'Importance')
+
+    # Left plot: Top 8 features
+    fig, axs = plt.subplots(1, 2, figsize=(20, 3.4))
+    axs[0].barh(top_8_features['Feature'], top_8_features['Importance'], color='steelblue')
+    axs[0].invert_yaxis()  # Invert y-axis to display the highest value at the top
+    axs[0].set_xlabel('Importance')
+    axs[0].set_xlim([0, 0.8])
+    axs[0].set_title('Top 8 Features')
+
+    # Right plot: Top 8 borough features
+    axs[1].barh(top_8_borough_features['Feature'], top_8_borough_features['Importance'], color='sandybrown')
+    axs[1].invert_yaxis()  # Invert y-axis to display the highest value at the top
+    axs[1].set_xlabel('Importance')
+    axs[1].set_xlim([0, 0.8])
+    axs[1].set_title('Top 8 Borough Features')
+
+    fig.suptitle(f'Impurity Feature Importance, Model {model}')
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95]) 
+    plt.savefig(f'../reports/figures/feature_importance/top_features_{model}', dpi=300)
+    plt.show()
+
+
+
+def ale_plot(x_test, ale_exp_1, ale_exp_2, selected_features, height, spacing, title, large_scale_index):
 
     # Convert the feature names to indices
     selected_feature_indices = [list(x_test.columns).index(name) for name in selected_features]
@@ -21,14 +92,15 @@ def ale_plot(x_test, ale_exp, selected_features, height, spacing, title, large_s
     axs = axs.flatten()
 
     for ax, feature_index in zip(axs, selected_feature_indices):
-        plot_ale(ale_exp, features=[feature_index], ax=ax)
+        plot_ale(ale_exp_1, features=[feature_index], ax=ax, line_kw={'label': 'Random Forest'})
+        plot_ale(ale_exp_2, features=[feature_index], ax=ax, line_kw={'label': 'Gradient Boosting'})
 
         # set another y-axis scale for hour feature
         if feature_index in large_scale_index:
             ax.set_ylabel('ALE (large scale!)')
-            ax.set_ylim([-400,900])
+            ax.set_ylim([-430,900])
         else:
-            ax.set_ylim([-180,180])
+            ax.set_ylim([-200,200])
 
     # Disable remaining axes
     for ax in axs[len(selected_features):]:
@@ -37,6 +109,7 @@ def ale_plot(x_test, ale_exp, selected_features, height, spacing, title, large_s
     plt.tight_layout()
     plt.subplots_adjust(top=spacing)
     plt.suptitle(f'ALE plot for {title}')
+    plt.savefig(f'../reports/figures/feature_importance/ale_{title}', dpi=300)
     plt.show()
 
 
@@ -119,7 +192,7 @@ def plot_shap_bar_and_beeswarm(shap_values, filename_bar_plot, filename_beeswarm
     new_image.paste(image_beeswarm, (new_size[0], 0))
 
     # Save the final image
-    new_image.save(filename_final)
+    new_image.save(filename_final, dpi=(300, 300), quality=100, subsampling=0)
     display(new_image)
 
 
@@ -175,7 +248,7 @@ def plot_boroughs_bar(shap_values, x_data, boroughs, global_min, global_max, fil
             x_offset += max_width
 
     # Save the final image
-    new_image.save(filename_final_boroughs)
+    new_image.save(filename_final_boroughs, dpi=(300, 300), quality=100, subsampling=0)
     display(new_image)
 
 
