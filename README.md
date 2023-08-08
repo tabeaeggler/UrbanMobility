@@ -1,7 +1,7 @@
-# UrbanMobility: Master Thesis by Tabea Eggler
+# Interpretable Machine Learning and Deep Learning for Evaluating Demographic Influences on Bike Sharing Demand in London Boroughs
 
 ## Introduction
-This repository contains code related to the master thesis project "Interpretable Machine Learning and Deep Learning for Evaluating Demographic Influences on Bike Sharing Demand in London Boroughs" by Tabea Eggler.
+This repository contains code related to the master thesis project by Tabea Eggler.
 
 
 ## Project Structure
